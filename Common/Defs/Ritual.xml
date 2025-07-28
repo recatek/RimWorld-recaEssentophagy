@@ -13,7 +13,7 @@
     <label>essentophagy</label>
     <description>Consume a target's essence to steal one of its traits.</description>
     <researchPrerequisite>Psychophagy</researchPrerequisite>
-    <outcomeDescription>At the current ritual quality, there is a {0} chance to steal a trait.{1}\n\nThe target will suffer considerable brain damage and may fall into a coma or die.</outcomeDescription>
+    <outcomeDescription>At the current ritual quality, there is a {0} chance to steal a trait.{1}\n\nThe target will suffer considerable brain damage, resulting in a coma or immediate death.</outcomeDescription>
     <targetRole>EssentophagyTarget</targetRole>
     <hoursUntilOutcome>4</hoursUntilOutcome>
     <requiredOffering>
