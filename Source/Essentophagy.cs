@@ -10,30 +10,37 @@ namespace Recatek.Essentophagy
 {
     public static class EssentophagyUtil
     {
-        public static List<Trait> GetSuitableTraits(Pawn invoker, Pawn target)
+        public static bool IsStealable(this Trait trait)
         {
-            List<Trait> suitable = new List<Trait>();
+            return (trait.suppressedByTrait == false)
+                && (trait.Suppressed == false)
+                && (trait.sourceGene == null);
+        }
+
+        public static List<Trait> GetCompatibleTraits(Pawn invoker, Pawn target)
+        {
+            List<Trait> compatible = new List<Trait>();
 
             if (invoker == null || target == null)
             {
-                return suitable;
+                return compatible;
             }
 
             foreach (Trait trait in target.story.traits.allTraits)
             {
-                if (invoker.IsTraitSuitable(trait))
-                    suitable.Add(trait);
+                if (invoker.IsTraitCompatible(trait))
+                    compatible.Add(trait);
             }
 
-            return suitable;
+            return compatible;
         }
 
-        private static bool IsTraitSuitable(this Pawn pawn, Trait trait)
+        private static bool IsTraitCompatible(this Pawn pawn, Trait trait)
         {
             List<WorkTypeDef> requiredWorkTypes = trait.def.requiredWorkTypes;
             WorkTags requiredWorkTags = trait.def.requiredWorkTags;
 
-            if (trait.suppressedByTrait || trait.Suppressed || trait.sourceGene != null)
+            if (trait.IsStealable() == false)
                 return false; // Can't grab the trait
             if (pawn.HasConflictingTraits(trait))
                 return false; // Pawn has a conflicting trait
@@ -100,9 +107,9 @@ namespace Recatek.Essentophagy
             Pawn invoker = assignments.FirstAssignedPawn(invokerRole);
             Pawn target = assignments.FirstAssignedPawn(targetRole);
 
-            List<Trait> suitableTraits = EssentophagyUtil.GetSuitableTraits(invoker, target);
-            if (suitableTraits.Count == 0)
-                yield return "recatek.essentophagy.noEligibleTrait".Translate(invoker.Named("INVOKER"));
+            List<Trait> compatibleTraits = EssentophagyUtil.GetCompatibleTraits(invoker, target);
+            if (compatibleTraits.Count == 0)
+                yield return "recatek.essentophagy.noCompatibleTrait".Translate(invoker.Named("INVOKER"));
         }
 
         public override TaggedString OutcomeDescription(FloatRange qualityRange, string qualityNumber, PsychicRitualRoleAssignments assignments)
@@ -110,18 +117,18 @@ namespace Recatek.Essentophagy
             CalculateMaxPower(assignments, new List<QualityFactor>(), out float power);
             string percentChance = successChanceFromQualityCurve.Evaluate(power).ToStringPercent();
 
-            List<Trait> suitableTraits = EssentophagyUtil.GetSuitableTraits(
+            List<Trait> compatibleTraits = EssentophagyUtil.GetCompatibleTraits(
                 assignments.FirstAssignedPawn(InvokerRole),
                 assignments.FirstAssignedPawn(TargetRole));
 
             string addendum = "";
-            if (suitableTraits.Count > 0)
+            if (compatibleTraits.Count > 0)
             {
-                string traits = suitableTraits.Select(t => t.LabelCap).ToCommaList();
-                if (suitableTraits.Count == 0)
-                    addendum = "recatek.essentophagy.eligibleTraits.single".Translate(traits);
+                string traits = compatibleTraits.Select(t => t.LabelCap).ToCommaList();
+                if (compatibleTraits.Count == 0)
+                    addendum = "recatek.essentophagy.compatibleTraits.single".Translate(traits);
                 else
-                    addendum = "recatek.essentophagy.eligibleTraits.multiple".Translate(traits);
+                    addendum = "recatek.essentophagy.compatibleTraits.multiple".Translate(traits);
             }
 
             return outcomeDescription.Formatted(percentChance, addendum);
@@ -131,16 +138,16 @@ namespace Recatek.Essentophagy
         {
             if (pawn.story.traits != null)
             {
-                string traitsList = "";
+                string traitList = "";
                 foreach (Trait trait in pawn.story.traits.allTraits)
                 {
-                    if (!trait.suppressedByTrait && !trait.Suppressed && trait.sourceGene == null)
-                        traitsList += "\n      - " + trait.LabelCap;
+                    if (trait.IsStealable())
+                        traitList += "\n      - " + trait.LabelCap;
                 }
 
-                if (traitsList.Length > 0)
+                if (traitList.Length > 0)
                 {
-                    yield return "recatek.essentophagy.availableTraits".Translate(traitsList);
+                    yield return "recatek.essentophagy.stealableTraits".Translate(traitList);
                 }
             }
         }
@@ -204,7 +211,7 @@ namespace Recatek.Essentophagy
             {
                 DamageBrain(invoker, target);
 
-                string failed = "recatek.essentophagy.outcome.noEligibleTrait".Translate(
+                string failed = "recatek.essentophagy.outcome.noCompatibleTrait".Translate(
                     target.Named("TARGET"), 
                     target.Named("INVOKER"));
                 failed += target.Dead
@@ -282,7 +289,7 @@ namespace Recatek.Essentophagy
         
         private static Trait SelectTraitToSteal(Pawn invoker, Pawn target)
         {
-            List<Trait> targetTraits = EssentophagyUtil.GetSuitableTraits(invoker, target);
+            List<Trait> targetTraits = EssentophagyUtil.GetCompatibleTraits(invoker, target);
 
             if (targetTraits.Count == 0)
             {
