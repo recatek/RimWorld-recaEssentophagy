@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E9C0E2FF-10B7-4ABD-AC08-60E87B63A560}") = "recaEssentophagy", "recaEssentophagy.csproj", "{49DA5C76-DB12-4168-91FE-38C02A1F68F5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{49DA5C76-DB12-4168-91FE-38C02A1F68F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49DA5C76-DB12-4168-91FE-38C02A1F68F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49DA5C76-DB12-4168-91FE-38C02A1F68F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49DA5C76-DB12-4168-91FE-38C02A1F68F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4744BE8B-34F5-4F7C-BE99-DDCAAEAEE003}
+	EndGlobalSection
+EndGlobal

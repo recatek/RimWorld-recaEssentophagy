@@ -1,0 +1,39 @@
+<Defs>
+  <PsychicRitualRoleDef>
+    <defName>EssentophagyTarget</defName>
+    <label>target</label>
+    <allowedCount>1</allowedCount>
+    <allowedConditions>Default, Downed, Prisoner, Sleeping, IdeoUnwilling</allowedConditions>
+    <applyPowerOffset>false</applyPowerOffset>
+	<removeOnLost>false</removeOnLost>
+  </PsychicRitualRoleDef>
+  
+  <Recatek.Essentophagy.PsychicRitualDef_Essentophagy>
+    <defName>Essentophagy</defName>
+    <label>essentophagy</label>
+    <description>Consume a target's essence to steal one of its traits.</description>
+    <researchPrerequisite>Psychophagy</researchPrerequisite>
+    <outcomeDescription>At the current ritual quality, there is a {0} chance to steal a trait.{1}\n\nThe target will suffer considerable brain damage and may fall into a coma or die.</outcomeDescription>
+    <targetRole>EssentophagyTarget</targetRole>
+    <hoursUntilOutcome>4</hoursUntilOutcome>
+    <requiredOffering>
+      <filter>
+        <thingDefs>
+          <li>Shard</li>
+        </thingDefs>
+      </filter>
+      <count>1</count>
+    </requiredOffering>
+    <cooldownHours>120</cooldownHours>
+    <successChanceFromQualityCurve>
+      <points>
+        <li>(0, 0)</li>
+        <li>(0.01, 0.2)</li>
+        <li>(0.5, 0.4)</li>
+        <li>(1, 0.8)</li>
+      </points>
+    </successChanceFromQualityCurve>
+    <brainDamageRange>6~12</brainDamageRange>
+    <iconPath>UI/Essentophagy</iconPath>
+  </Recatek.Essentophagy.PsychicRitualDef_Essentophagy>
+</Defs>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+	<recatek.essentophagy.noEligibleTrait>No compatible traits for {INVOKER_nameDef} to steal.</recatek.essentophagy.noEligibleTrait>
+
+	<recatek.essentophagy.eligibleTraits.single> The following trait may be stolen: {0}</recatek.essentophagy.eligibleTraits.single>
+	<recatek.essentophagy.eligibleTraits.multiple> The following traits may be stolen: {0}</recatek.essentophagy.eligibleTraits.multiple>
+
+	<recatek.essentophagy.outcome.failed>The psychic ritual failed.</recatek.essentophagy.outcome.failed>
+	<recatek.essentophagy.outcome.noEligibleTrait>The psychic ritual failed. {TARGET_nameDef} had no compatible traits to steal from {TARGET_nameDef}.</recatek.essentophagy.outcome.noEligibleTrait>
+	<recatek.essentophagy.outcome.completed>The psychic ritual completed. {INVOKER_nameDef} stole the {2} trait from {TARGET_nameDef}.</recatek.essentophagy.outcome.completed>
+
+	<recatek.essentophagy.availableTraits>Stealable traits:{0}</recatek.essentophagy.availableTraits>
+	
+</LanguageData>
