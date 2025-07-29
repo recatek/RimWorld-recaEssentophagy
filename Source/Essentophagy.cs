@@ -5,6 +5,7 @@ using Verse;
 using Verse.AI.Group;
 using System.Linq;
 using System;
+using Verse.Noise;
 
 namespace Recatek.Essentophagy
 {
@@ -14,7 +15,19 @@ namespace Recatek.Essentophagy
         {
             return (trait.suppressedByTrait == false)
                 && (trait.Suppressed == false)
-                && (trait.sourceGene == null);
+                && (trait.sourceGene == null)
+                // No creepjoiner traits
+                && (trait.def != TraitDefOf.Occultist)
+                && (trait.def != TraitDefOf.Joyous)
+                && (trait.def != TraitDefOf.PerfectMemory)
+                && (trait.def != TraitDefOf.Disturbing)
+                && (trait.def != TraitDefOf.VoidFascination)
+                && (trait.def != TraitDef.Named("BodyMastery"));
+        }
+
+        public static bool IsDroppable(this Trait trait)
+        {
+            return trait.sourceGene == null;
         }
 
         public static List<Trait> GetCompatibleTraits(Pawn invoker, Pawn target)
@@ -90,12 +103,12 @@ namespace Recatek.Essentophagy
     {
         public FloatRange brainDamageRange;
         public SimpleCurve successChanceFromQualityCurve;
+        public SimpleCurve breakdownSeverityCurve;
 
         public override List<PsychicRitualToil> CreateToils(PsychicRitual psychicRitual, PsychicRitualGraph parent)
         {
             List<PsychicRitualToil> list = base.CreateToils(psychicRitual, parent);
-            list.Add(new PsychicRitualToil_Essentophagy(InvokerRole, TargetRole, brainDamageRange));
-            list.Add(new PsychicRitualToil_TargetCleanup(InvokerRole, TargetRole));
+            list.Add(new PsychicRitualToil_Essentophagy(InvokerRole, TargetRole));
             return list;
         }
 
@@ -158,19 +171,18 @@ namespace Recatek.Essentophagy
         public PsychicRitualRoleDef invokerRole;
         public PsychicRitualRoleDef targetRole;
 
-        public FloatRange brainDamageRange;
-        public float successChance;
+        public float successChance = 0f;
+        public float breakdownSeverity = 0f;
 
         protected PsychicRitualToil_Essentophagy() 
         {
             // Pass
         }
 
-        public PsychicRitualToil_Essentophagy(PsychicRitualRoleDef invokerRole, PsychicRitualRoleDef targetRole, FloatRange brainDamageRange)
+        public PsychicRitualToil_Essentophagy(PsychicRitualRoleDef invokerRole, PsychicRitualRoleDef targetRole)
         {
             this.invokerRole = invokerRole;
             this.targetRole = targetRole;
-            this.brainDamageRange = brainDamageRange;
         }
 
         public override void Start(PsychicRitual psychicRitual, PsychicRitualGraph parent)
@@ -185,82 +197,47 @@ namespace Recatek.Essentophagy
 
         private void ApplyOutcome(PsychicRitual psychicRitual, Pawn invoker, Pawn target)
         {
-            // Apply psychic shock
-            Hediff hediff = HediffMaker.MakeHediff(HediffDefOf.DarkPsychicShock, target);
-            target.health.AddHediff(hediff);
-
-            // Add memories and thoughts
-            target.needs?.mood?.thoughts?.memories?.TryGainMemory(ThoughtDefOf.PsychicRitualVictim);
-            foreach (Pawn pawn in psychicRitual.assignments.AllAssignedPawns.Except(target))
-                target.needs?.mood?.thoughts?.memories?.TryGainMemory(ThoughtDefOf.UsedMeForPsychicRitual, pawn);
-
             // Get the success chance
             PsychicRitualDef_Essentophagy psychicRitualDef_Essentophagy = (PsychicRitualDef_Essentophagy)psychicRitual.def;
             successChance = psychicRitualDef_Essentophagy.successChanceFromQualityCurve.Evaluate(psychicRitual.PowerPercent);
-            bool succeeded = Rand.Chance(successChance);
 
-            // Apply brain damage and give guilt to map pawns
-            DamageBrain(invoker, target);
-            PsychicRitualUtility.AddPsychicRitualGuiltToPawns(
-                psychicRitual.def, 
-                psychicRitual.Map.mapPawns.FreeColonistsSpawned.Where((Pawn p) => p != target));
+            // Get the breakdown severity
+            float breakdownProb = Rand.Range(0.0f, Mathf.Max(1.0f - psychicRitual.PowerPercent, 0.0f));
+            breakdownSeverity = Mathf.Ceil(psychicRitualDef_Essentophagy.breakdownSeverityCurve.Evaluate(breakdownProb));
+
+            // Determine success or failure
+            bool succeeded = Rand.Chance(successChance);
 
             // Fail due to missing traits
             Trait traitToSteal = SelectTraitToSteal(invoker, target);
             if (traitToSteal == null)
             {
-                DamageBrain(invoker, target);
-
-                string failed = "recatek.essentophagy.outcome.noCompatibleTrait".Translate(
-                    target.Named("TARGET"), 
-                    target.Named("INVOKER"));
-                failed += target.Dead
-                    ? "\n\n" + "PsychicRitualTargetBrainLiquified".Translate(target.Named("TARGET"))
-                    : "\n\n" + "PhilophagyDamagedTarget".Translate(target.Named("TARGET"));
-                Find.LetterStack.ReceiveLetter(
-                    "PsychicRitualCompleteLabel".Translate(psychicRitual.def.label),
-                    failed,
-                    LetterDefOf.NeutralEvent,
-                    new LookTargets(invoker, target));
-
+                string noTrait = "recatek.essentophagy.outcome.noCompatibleTrait".Translate(target.Named("TARGET"), target.Named("INVOKER"));
+                ApplyConsquences(psychicRitual, invoker, target, noTrait);
                 return;
             }
 
             // Fail due to random chance (after failing due to missing traits, for clarity)
             if (succeeded == false)
             {
-                string failed = "recatek.essentophagy.outcome.failed".Translate(
-                    target.Named("TARGET"));
-                failed += target.Dead 
-                    ? "\n\n" + "PsychicRitualTargetBrainLiquified".Translate(target.Named("TARGET"))
-                    : "\n\n" + "PhilophagyDamagedTarget".Translate(target.Named("TARGET"));
-                Find.LetterStack.ReceiveLetter(
-                    "PsychicRitualCompleteLabel".Translate(psychicRitual.def.label),
-                    failed,
-                    LetterDefOf.NeutralEvent,
-                    new LookTargets(invoker, target));
-
+                string failure = "recatek.essentophagy.outcome.failed".Translate(target.Named("TARGET"));
+                ApplyConsquences(psychicRitual, invoker, target, failure);
                 return;
             }
 
             // Steal the trait
             string stolenTraitName = traitToSteal.LabelCap;
+            string droppedTraitName = TryDropTrait(invoker, maxTraits: 4);
             ExtractTrait(target, traitToSteal);
             InstallTrait(invoker, traitToSteal);
 
             // Report success
-            string completed = "recatek.essentophagy.outcome.completed".Translate(
-                invoker.Named("INVOKER"), 
-                target.Named("TARGET"), 
-                stolenTraitName);
-            completed += target.Dead
-                ? "\n\n" + "PsychicRitualTargetBrainLiquified".Translate(target.Named("TARGET"))
-                : "\n\n" + "PhilophagyDamagedTarget".Translate(target.Named("TARGET"));
-            Find.LetterStack.ReceiveLetter(
-                "PsychicRitualCompleteLabel".Translate(psychicRitual.def.label),
-                completed,
-                LetterDefOf.NeutralEvent,
-                new LookTargets(invoker, target));
+            string success = "recatek.essentophagy.outcome.completed".Translate(invoker.Named("INVOKER"), target.Named("TARGET"), stolenTraitName);
+            success += (droppedTraitName != null)
+                ? "recatek.essentophagy.outcome.droppedTrait".Translate(invoker.Named("INVOKER"), droppedTraitName)
+                : TaggedString.Empty;
+
+            ApplyConsquences(psychicRitual, invoker, target, success);
         }
 
         public override void ExposeData()
@@ -268,17 +245,88 @@ namespace Recatek.Essentophagy
             base.ExposeData();
             Scribe_Defs.Look(ref invokerRole, "invokerRole");
             Scribe_Defs.Look(ref targetRole, "targetRole");
-            Scribe_Values.Look(ref brainDamageRange, "brainDamageRange");
             Scribe_Values.Look(ref successChance, "successChance", 0);
+            Scribe_Values.Look(ref breakdownSeverity, "breakdownSeverity", 0f);
         }
 
-        private void DamageBrain(Pawn invoker, Pawn target)
+        private void ApplyConsquences(PsychicRitual psychicRitual, Pawn invoker, Pawn target, string outcome)
+        {
+            // Add guilt
+            PsychicRitualUtility.AddPsychicRitualGuiltToPawns(
+                psychicRitual.def,
+                psychicRitual.Map.mapPawns.FreeColonistsSpawned.Where((Pawn p) => p != target));
+
+            // Add memories and thoughts
+            target.needs?.mood?.thoughts?.memories?.TryGainMemory(ThoughtDefOf.PsychicRitualVictim);
+            foreach (Pawn pawn in psychicRitual.assignments.AllAssignedPawns.Except(target))
+                target.needs?.mood?.thoughts?.memories?.TryGainMemory(ThoughtDefOf.UsedMeForPsychicRitual, pawn);
+
+            // Apply brain damage and psychic shock to target
+            DamageBrain(psychicRitual, invoker, target);
+            Hediff targetShock = HediffMaker.MakeHediff(HediffDefOf.DarkPsychicShock, target);
+            target.health.AddHediff(targetShock);
+
+            // Damage relations with the target's home faction, if applicable
+            bool affectGoodWill =
+                invoker.IsPlayerControlled
+                && target.Faction != null
+                && target.HomeFaction != null
+                && target.HomeFaction != Faction.OfPlayer
+                && target.HomeFaction.def.humanlikeFaction
+                && !target.Faction.def.PermanentlyHostileTo(FactionDefOf.PlayerColony);
+            if (affectGoodWill)
+            {
+                target.HomeFaction.TryAffectGoodwillWith(
+                    Faction.OfPlayer,
+                    -50,
+                    canSendMessage: true,
+                    canSendHostilityLetter: true,
+                    HistoryEventDefOf.WasPsychicRitualTarget);
+            }
+
+            QuestUtility.SendQuestTargetSignals(
+                target.questTags,
+                "PsychicRitualTarget",
+                target.Named("SUBJECT"));
+
+            outcome += target.Dead
+                ? "\n\n" + "PsychicRitualTargetBrainLiquified".Translate(target.Named("TARGET"))
+                : "\n\n" + "PhilophagyDamagedTarget".Translate(target.Named("TARGET"));
+            Find.LetterStack.ReceiveLetter(
+                "PsychicRitualCompleteLabel".Translate(psychicRitual.def.label),
+                outcome,
+                LetterDefOf.NeutralEvent,
+                new LookTargets(invoker, target));
+
+            if (breakdownSeverity > 0.0f)
+            {
+                Hediff invokerBreakdown = HediffMaker.MakeHediff(HediffDef.Named("PsychicBreakdown"), target);
+                invokerBreakdown.Severity = Mathf.Ceil(breakdownSeverity);
+                invoker.health.AddHediff(invokerBreakdown);
+
+                Find.LetterStack.ReceiveLetter(
+                    "recatek.essentophagy.breakdown.label".Translate(invoker.Named("INVOKER")),
+                    "recatek.essentophagy.breakdown.message".Translate(invoker.Named("INVOKER")),
+                    LetterDefOf.NeutralEvent,
+                    new LookTargets(invoker));
+            }
+        }
+
+        private void DamageBrain(PsychicRitual psychicRitual, Pawn invoker, Pawn target)
         {
             BodyPartRecord brain = target.health.hediffSet.GetBrain();
 
             if (brain != null)
             {
-                target.TakeDamage(new DamageInfo(DamageDefOf.Psychic, brainDamageRange.RandomInRange, 0f, -1f, null, brain));
+                PsychicRitualDef_Essentophagy psychicRitualDef_Essentophagy = (PsychicRitualDef_Essentophagy)psychicRitual.def;
+                target.TakeDamage(
+                    new DamageInfo(
+                        DamageDefOf.Psychic, 
+                        psychicRitualDef_Essentophagy.brainDamageRange.RandomInRange, 
+                        0f, 
+                        -1f, 
+                        null, 
+                        brain));
             }
 
             if (target.Dead)
@@ -297,6 +345,28 @@ namespace Recatek.Essentophagy
             }
 
             return targetTraits.RandomElement();
+        }
+
+        private static string TryDropTrait(Pawn pawn, int maxTraits)
+        { 
+            List<Trait> traitsToDrop = new List<Trait>();
+            foreach (Trait trait in pawn.story.traits.allTraits)
+            {
+                if (trait.IsDroppable())
+                {
+                    traitsToDrop.Add(trait);
+                }
+            }
+
+            if ((traitsToDrop.Count + 1) <= maxTraits)
+            {
+                return null;
+            }
+
+            Trait dropped = traitsToDrop.RandomElement();
+            ExtractTrait(pawn, dropped);
+
+            return dropped.LabelCap;
         }
 
         private static void ExtractTrait(Pawn pawn, Trait trait)

@@ -3,12 +3,16 @@
 
 	<recatek.essentophagy.noCompatibleTrait>No compatible traits for {INVOKER_nameDef} to steal.</recatek.essentophagy.noCompatibleTrait>
 
-	<recatek.essentophagy.compatibleTraits.single> The following trait may be stolen: {0}</recatek.essentophagy.compatibleTraits.single>
-	<recatek.essentophagy.compatibleTraits.multiple> The following traits may be stolen: {0}</recatek.essentophagy.compatibleTraits.multiple>
+	<recatek.essentophagy.compatibleTraits.single> The following trait may be stolen: {0}.</recatek.essentophagy.compatibleTraits.single>
+	<recatek.essentophagy.compatibleTraits.multiple> The following traits may be stolen: {0}.</recatek.essentophagy.compatibleTraits.multiple>
 
 	<recatek.essentophagy.outcome.failed>The psychic ritual failed.</recatek.essentophagy.outcome.failed>
 	<recatek.essentophagy.outcome.noCompatibleTrait>The psychic ritual failed. {TARGET_nameDef} had no compatible traits to steal from {TARGET_nameDef}.</recatek.essentophagy.outcome.noCompatibleTrait>
 	<recatek.essentophagy.outcome.completed>The psychic ritual completed. {INVOKER_nameDef} stole the {2} trait from {TARGET_nameDef}.</recatek.essentophagy.outcome.completed>
+	<recatek.essentophagy.outcome.droppedTrait> As part of the process, {INVOKER_nameDef} lost the {1} trait.</recatek.essentophagy.outcome.droppedTrait>
+
+	<recatek.essentophagy.breakdown.label>Psychic breakdown: {INVOKER_nameDef}</recatek.essentophagy.breakdown.label>
+	<recatek.essentophagy.breakdown.message>{INVOKER_nameDef} is experiencing a temporary psychic breakdown from the Essentophagy ritual.</recatek.essentophagy.breakdown.message>
 
 	<recatek.essentophagy.stealableTraits>Stealable traits:{0}</recatek.essentophagy.stealableTraits>
 	
