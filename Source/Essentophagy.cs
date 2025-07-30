@@ -266,6 +266,10 @@ namespace Recatek.Essentophagy
             Hediff targetShock = HediffMaker.MakeHediff(HediffDefOf.DarkPsychicShock, target);
             target.health.AddHediff(targetShock);
 
+            // Apply ritual sickness to the target
+            Hediff invokerSickness = HediffMaker.MakeHediff(HediffDef.Named("recatek_RitualSickness"), invoker);
+            invoker.health.AddHediff(invokerSickness);
+
             // Damage relations with the target's home faction, if applicable
             bool affectGoodWill =
                 invoker.IsPlayerControlled
@@ -300,7 +304,7 @@ namespace Recatek.Essentophagy
 
             if (breakdownSeverity > 0.0f)
             {
-                Hediff invokerBreakdown = HediffMaker.MakeHediff(HediffDef.Named("PsychicBreakdown"), target);
+                Hediff invokerBreakdown = HediffMaker.MakeHediff(HediffDef.Named("PsychicBreakdown"), invoker);
                 invokerBreakdown.Severity = Mathf.Ceil(breakdownSeverity);
                 invoker.health.AddHediff(invokerBreakdown);
 

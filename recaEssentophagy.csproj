@@ -67,7 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Common\.gitignore" />
-    <Content Include="Common\Defs\Ritual.xml" />
+    <Content Include="Common\Defs\HediffDefs.xml" />
+    <Content Include="Common\Defs\PsychicRituals.xml" />
     <Content Include="Common\Textures\UI\Essentophagy.png" />
     <Content Include="Languages\English\Keyed\English.xml" />
   </ItemGroup>

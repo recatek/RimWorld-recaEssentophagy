@@ -1,6 +1,6 @@
 <Defs>
   <PsychicRitualRoleDef>
-    <defName>EssentophagyTarget</defName>
+    <defName>recatek_EssentophagyTarget</defName>
     <label>target</label>
     <allowedCount>1</allowedCount>
     <allowedConditions>Default, Downed, Prisoner, Sleeping, IdeoUnwilling</allowedConditions>
@@ -9,12 +9,12 @@
   </PsychicRitualRoleDef>
   
   <Recatek.Essentophagy.PsychicRitualDef_Essentophagy>
-    <defName>Essentophagy</defName>
+    <defName>recatek_Essentophagy</defName>
     <label>essentophagy</label>
     <description>Consume a target's essence to steal one of its traits. If the invoker already has 4 or more innate traits, one will be lost at random.</description>
     <researchPrerequisite>Psychophagy</researchPrerequisite>
     <outcomeDescription>At the current ritual quality, there is a {0} chance to steal a trait.{1}\n\nRegardless of outcome, the target will receive lethal brain damage and the invoker may suffer a psychic breakdown lasting days. </outcomeDescription>
-    <targetRole>EssentophagyTarget</targetRole>
+    <targetRole>recatek_EssentophagyTarget</targetRole>
     <hoursUntilOutcome>4</hoursUntilOutcome>
     <requiredOffering>
       <filter>
