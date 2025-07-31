@@ -72,6 +72,7 @@
     <Content Include="Common\Textures\UI\Essentophagy.dds" />
     <Content Include="Common\Textures\UI\Essentophagy.png" />
     <Content Include="Languages\English\Keyed\English.xml" />
+    <Content Include="Source\Images\Essentophagy.svg" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Assemblies\" />
