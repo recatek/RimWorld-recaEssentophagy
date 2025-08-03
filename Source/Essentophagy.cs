@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using RimWorld;
+using System.Linq;
+
 using UnityEngine;
+using RimWorld;
 using Verse;
 using Verse.AI.Group;
-using System.Linq;
-using System;
-using Verse.Noise;
 
 namespace Recatek.Essentophagy
 {
